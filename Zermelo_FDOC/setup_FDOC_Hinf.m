@@ -3,7 +3,7 @@
 %-------------------------- appropriately --------------------------%
 %-------------------------------------------------------------------%
 
-function [C, IC, FC, LB, UB] = setup_FDOC_v2()
+function [C, IC, FC, LB, UB] = setup_FDOC_Hinf()
 
 % C  - Constants
 % IC - Initial conditions
@@ -13,6 +13,7 @@ function [C, IC, FC, LB, UB] = setup_FDOC_v2()
 
 %% Important constants
 
+C.gamma   = 5;
 C.p1      = 10;
 C.p2      = -0.5;
 C.p       = [C.p1; C.p2];
@@ -21,10 +22,11 @@ eta2      = 0.05;
 sigma1    = eta1 / 3 * C.p1;
 sigma2    = eta2 / 3 * C.p2;
 C.SigmaP  = blkdiag(sigma1^2, sigma2^2);
-C.Qf      = blkdiag(10, 100);
+C.Qf      = blkdiag(1,10);
 C.Q       = eye(2);
-C.R       = 20;
-C.alpha   = 50;
+C.R       = 1;
+C.Rp      = eye(2);
+C.alpha   = 100;
 
 %% Initial conditions
 

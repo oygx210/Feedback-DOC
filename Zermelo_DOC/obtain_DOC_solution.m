@@ -1,4 +1,4 @@
-function sol = obtain_FDOC_solution_v2(C, IC, FC, LB, UB)
+function sol = obtain_DOC_solution(C, IC, FC, LB, UB)
 
 % Auxiliary data for GPOPS-II
 
@@ -6,7 +6,6 @@ auxdata.p1       = C.p1;
 auxdata.p2       = C.p2;
 auxdata.Qf       = C.Qf;
 auxdata.Q        = C.Q;
-auxdata.R        = C.R;
 auxdata.SigmaP   = C.SigmaP;
 auxdata.alpha    = C.alpha;
 
@@ -21,16 +20,16 @@ bounds.phase.finaltime.lower   = LB.tf;
 bounds.phase.finaltime.upper   = UB.tf;
 
 % Initial state bounds
-bounds.phase.initialstate.lower = [IC.x1, IC.x2, IC.Svec, LB.Pvec];
-bounds.phase.initialstate.upper = [IC.x1, IC.x2, IC.Svec, UB.Pvec];
+bounds.phase.initialstate.lower = [IC.x1, IC.x2, IC.Svec];
+bounds.phase.initialstate.upper = [IC.x1, IC.x2, IC.Svec];
 
 % State bounds
-bounds.phase.state.lower = [LB.x1, LB.x2, LB.Svec, LB.Pvec];
-bounds.phase.state.upper = [UB.x1, UB.x2, UB.Svec, UB.Pvec];
+bounds.phase.state.lower = [LB.x1, LB.x2, LB.Svec];
+bounds.phase.state.upper = [UB.x1, UB.x2, UB.Svec];
 
 % Final state bounds
-bounds.phase.finalstate.lower = [LB.x1, FC.x2, LB.Svec, FC.Pvec];
-bounds.phase.finalstate.upper = [UB.x1, FC.x2, UB.Svec, FC.Pvec];
+bounds.phase.finalstate.lower = [LB.x1, FC.x2, LB.Svec];
+bounds.phase.finalstate.upper = [UB.x1, FC.x2, UB.Svec];
 
 % Control bounds
 bounds.phase.control.lower = LB.u;
@@ -49,11 +48,10 @@ tGuess     = [0; 1];
 x1Guess    = [IC.x1; UB.x1];
 x2Guess    = [IC.x2; FC.x2];
 SvecGuess  = [IC.Svec; IC.Svec];
-PvecGuess  = [zeros(1,4); FC.Pvec];
 uGuess     = [UB.u; LB.u];
 
 % Guesses for staste, control, and time
-guess.phase.state     = [x1Guess, x2Guess, SvecGuess, PvecGuess];
+guess.phase.state     = [x1Guess, x2Guess, SvecGuess];
 guess.phase.control   = uGuess;
 guess.phase.time      = tGuess;
 guess.phase.integral  = 10;
@@ -74,9 +72,9 @@ mesh.tolerance     = 5e-5;
 %-------------------------------------------------------------------%
 %---------- Configure Setup Using the information provided ---------%
 %-------------------------------------------------------------------%
-setup.name                           = 'Zermelo-FDOC-Problem-v2';
-setup.functions.continuous           = @Zermelo_FDOC_Continuous_v2;
-setup.functions.endpoint             = @Zermelo_FDOC_Endpoint_v2;
+setup.name                           = 'Zermelo-DOC-Problem';
+setup.functions.continuous           = @Zermelo_DOC_Continuous;
+setup.functions.endpoint             = @Zermelo_DOC_Endpoint;
 setup.auxdata                        = auxdata;
 setup.bounds                         = bounds;
 setup.guess                          = guess;

@@ -1,12 +1,14 @@
-function sol = obtain_FDOC_solution_v2(C, IC, FC, LB, UB)
+function sol = obtain_FDOC_solution_Hinf(C, IC, FC, LB, UB)
 
 % Auxiliary data for GPOPS-II
 
+auxdata.gamma    = C.gamma;
 auxdata.p1       = C.p1;
 auxdata.p2       = C.p2;
 auxdata.Qf       = C.Qf;
 auxdata.Q        = C.Q;
 auxdata.R        = C.R;
+auxdata.Rp       = C.Rp;
 auxdata.SigmaP   = C.SigmaP;
 auxdata.alpha    = C.alpha;
 
@@ -67,16 +69,16 @@ mesh.method       = 'hp-LiuRao-Legendre';
 % mesh.method       = 'hp-DarbyRao';
 % mesh.method       = 'hp-PattersonRao';
 mesh.maxiterations = 30;
-mesh.colpointsmin  = 3;
+mesh.colpointsmin  = 5;
 mesh.colpointsmax  = 20;
-mesh.tolerance     = 5e-5;
+mesh.tolerance     = 1e-3;
 
 %-------------------------------------------------------------------%
 %---------- Configure Setup Using the information provided ---------%
 %-------------------------------------------------------------------%
-setup.name                           = 'Zermelo-FDOC-Problem-v2';
-setup.functions.continuous           = @Zermelo_FDOC_Continuous_v2;
-setup.functions.endpoint             = @Zermelo_FDOC_Endpoint_v2;
+setup.name                           = 'Zermelo-FDOC-Problem-Hinf';
+setup.functions.continuous           = @Zermelo_FDOC_Continuous_Hinf;
+setup.functions.endpoint             = @Zermelo_FDOC_Endpoint_Hinf;
 setup.auxdata                        = auxdata;
 setup.bounds                         = bounds;
 setup.guess                          = guess;
