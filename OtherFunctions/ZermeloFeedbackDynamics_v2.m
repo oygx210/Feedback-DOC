@@ -1,4 +1,4 @@
-function xdot = ZermeloFeedbackDynamics_v2(t,x,feedback,C,p)
+function xdot = ZermeloFeedbackDynamics_v2(t,x,feedback,C,p,num)
 
 % Get state at time t
 x1 = x(1);
@@ -12,7 +12,11 @@ p2 = p(2);
 ts = feedback.phase.time;
 us = feedback.phase.control;
 xs = feedback.phase.state(:, 1:2);
-Ps = feedback.phase.state(:, 7:10);
+if num == 1
+    Ps = feedback.phase.state(:, 7:10);
+else
+    Ps = feedback.phase.state(:, 11 : 14);
+end
 
 % Interpolate nominal state, control, and Riccati matrix at time t
 x_nom = interp1(ts, xs, t)';

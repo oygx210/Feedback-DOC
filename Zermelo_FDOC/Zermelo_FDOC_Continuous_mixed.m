@@ -1,4 +1,4 @@
-function phaseout = Zermelo_FDOC_Continuous_Hinf(input)
+function phaseout = Zermelo_FDOC_Continuous_mixed(input)
 
 % ---------------------------------------------------%
 % ------ Extract Each Component of the State ------- %
@@ -6,7 +6,6 @@ function phaseout = Zermelo_FDOC_Continuous_Hinf(input)
 x1    = input.phase.state(:,1);     % Downstream
 x2    = input.phase.state(:,2);     % Upstream
 Svec  = input.phase.state(:,3:6);
-Pvec  = input.phase.state(:,7:10);
 
 % Extract number of time steps
 N = numel(x1);
@@ -25,10 +24,11 @@ gamma   = input.auxdata.gamma;
 p1      = input.auxdata.p1;
 p2      = input.auxdata.p2;
 p       = [p1; p2];
-Q       = input.auxdata.Q;
-R       = input.auxdata.R;
 SigmaP  = input.auxdata.SigmaP;
-Rp       = input.auxdata.Rp;
+C2      = input.auxdata.C2;
+D2      = input.auxdata.D2;
+Cinf    = input.auxdata.Cinf;
+Dinf    = input.auxdata.Dinf;
 
 % ---------------------------------------------------%
 % ---- Evaluate Right-Hand Side of the Dynamics ---- %
@@ -41,9 +41,6 @@ x2dot   = sin(u) + p2;
 % ---------------------- Evaluate Feedback Cost ------------------ %
 % -----------------------------------------------------------------%
 
-% Initialize Riccati matrix dynamics
-Pdot = zeros(N, 4);
-
 % Initialize sensitivity matrix dynamics
 Sdot = zeros(N, 4);
 
@@ -53,14 +50,8 @@ J_feedback = zeros(N,1);
 % Loop through each time step 
 for k = 1 : N
     
-    % Get Riccati vector at time tk
-    Pvec_k = Pvec(k,:);
-    
     % Get sensitivity vector at time tk
     Svec_k = Svec(k,:);
-    
-    % Reshape Riccati vector -> Riccati matrix
-    P_k = reshape(Pvec_k, 2, 2);
     
     % Reshape sensitivity vector -> sensitivity matrix
     S_k = reshape(Svec_k, 2, 2);
@@ -78,10 +69,12 @@ for k = 1 : N
     B_k = computeControlLinearization(x_k, u_k, p);
     D_k = computeParameterLinearization_v2(x_k, u_k, p);
     
-    % Compute minimizing control and maximizing disturbance
-    K_k = -R \ B_k' * P_k;
-    %L_k = (1 / gamma^2) * Rp \ D_k' * P_k;
-    L_k = Rp \ D_k' * P_k;
+    % Compute minimizing feedback control K_k
+    
+    X0   = zeros(8, 1);
+    Xk   = fsolve(@(X) coupledRiccati(X,A_k,B_k,D_k,Cinf,C2,gamma), X0);  
+    
+    %solution_k = mixed_L2_Linf_LMI(A_k,B_k,D_k,C2,D2,Cinf,Dinf,gamma);
     
     % Propagate sensitivity dynamics
     Sdot_k = (A_k + B_k * K_k) * S_k + D_k;
@@ -113,6 +106,31 @@ phaseout.dynamics  = [x1dot, x2dot, Sdot, Pdot];
 % Ouput Lagrangian (running cost)
 phaseout.integrand = J_feedback;
                   
+end
+
+function out = coupledRiccati(X,A,B,D,Cinf,C2,gamma)
+
+% Get Riccati matrices
+P1 = reshape(X(1 : 4), 2, 2);
+P2 = reshape(X(5 : 8), 2, 2);
+
+% Riccati 1
+mat1 = -Cinf' * Cinf - P2 * B * B' * P2 - (1 / gamma^2) * P1 * D * D' * P1 + P1 * A + ...
+          + A' * P1 - (P1 * B * B' * P2 + P2 * D * D' * P1);
+vec1 = reshape(mat1, 4, 1);
+out(1 : 4) = vec1;
+
+% Riccati 2
+mat2 = C2' * C2 - P2 * B * B' * P2 + P2 * A + A' * P2 + ...
+          - (1 / gamma^2) * (P2 * D * D' * P1 + P1 * D * D' * P2);
+vec2 = reshape(mat2, 4, 1);
+out(5 : 8) = vec2;
+% 
+% % Symmetry
+% out(9)  = X(2) - X(3);
+% out(10) = X(6) - X(7); 
+
+
 end
 
     
